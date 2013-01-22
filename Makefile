@@ -17,8 +17,8 @@ boj-install: example/boj
 
 install: $(PROG).tmp $(PROG).1.tmp
 	mkdir -p $(BINDIR) $(MANDIR)
-	install -T $(PROG).tmp $(BINDIR)/$(PROG)
-	install -T $(PROG).1.tmp $(MANDIR)/$(PROG).1
+	install $(PROG).tmp $(BINDIR)/$(PROG)
+	install $(PROG).1.tmp $(MANDIR)/$(PROG).1
 
 dist: $(PROG)-$(VERSION).tar.gz
 
