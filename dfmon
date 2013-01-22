@@ -13,7 +13,7 @@ while getopts :r opt; do
     esac
 done
 
-main()
+main() {
     df -lP | awk '/^\// { print $5, $6 }' | while read -r used mount; do
         mkdir -p $var$mount
         cd $var$mount 
@@ -43,3 +43,4 @@ main()
     exit $err
 }
 
+main "$@"
