@@ -2,41 +2,35 @@ include config.mk
 
 SOURCES = $(PROG) $(PROG).1 Makefile README LICENSE config.mk example
 
-default:
-	@echo "You must specify a target (install or dist)"
+default: $(PROG).tmp $(PROG).1.tmp
 
-metadata:
-	@sed -i.bak -e "s/ @@VERSION.*/ @@VERSION $(VERSION)/"       \
-	       -e "s/ @@AUTHOR.*/ @@AUTHOR $(AUTHOR)/"          \
-	       -e "s/ @@COPYRIGHT.*/ @@COPYRIGHT $(COPYRIGHT)/" \
-	       $(PROG) $(PROG).1
+$(PROG).tmp: $(PROG)
+	m4 -D__VERSION__="$(VERSION)" -D__AUTHOR__="$(AUTHOR)" -D__COPYRIGHT__="$(COPYRIGHT)" $< > $@
 
-foo:
-	perl -i -pe "s/ @@VERSION.*/ @@VERSION $(VERSION)/;
-	@VERSION="$(VERSION)" AUTHOR="$(AUTHOR)" COPYRIGHT="$(COPYRIGHT)" \
-		perl -i -pe 's/ @@(VERSION|AUTHOR|COPYRIGHT).*/ \@\@$$1 $$ENV{$$1}/' $(PROG) $(PROG).1
+$(PROG).1.tmp: $(PROG).1
+	m4 -D__VERSION__="$(VERSION)" -D__AUTHOR__="$(AUTHOR)" -D__COPYRIGHT__="$(COPYRIGHT)" $< > $@
 
 boj-install: example/boj
 	mkdir -p /var/local/$(PROG)
 	install example/boj/run /var/local/$(PROG)
 	install -m 644 example/boj/mail* /var/local/$(PROG)
 
-install: $(PROG) $(PROG).1
+install: $(PROG).tmp $(PROG).1.tmp
 	mkdir -p $(BINDIR) $(MANDIR)
-	install $(PROG) $(BINDIR)/
-	install $(PROG).1 $(MANDIR)
+	install $(PROG).tmp $(BINDIR)/$(PROG)
+	install $(PROG).1.tmp $(MANDIR)/$(PROG).1
 
 dist: $(PROG)-$(VERSION).tar.gz
 
 $(PROG)-$(VERSION).tar.gz: $(PROG)-$(VERSION)
 	tar -czf $@ $<
 
-$(PROG)-$(VERSION): metadata $(SOURCES)
+$(PROG)-$(VERSION): $(SOURCES)
 	rm -Rf $@
 	mkdir $@
 	cp -r $(SOURCES) $@/
 
 clean:
-	rm -Rf $(PROG)-*.*.* *.bak
+	rm -Rf $(PROG)-*.*.* *.bak *.tmp
 
-.PHONY: default metadata install dist clean
+.PHONY: default install dist clean
