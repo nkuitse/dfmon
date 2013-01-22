@@ -20,7 +20,7 @@ main()
         [[ ! -e SKIP ]] || continue
         cur=${used[1,-2]}
         if [[ ! -e LOG ]]; then
-            print "$host: disk usage monitoring begun: $mount is at $used used" >&2
+            print "$host: disk usage on $mount is now being monitored: currently $used used" >&2
             print $timestamp $cur >> LOG
             continue
         fi
