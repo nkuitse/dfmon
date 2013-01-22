@@ -13,7 +13,7 @@ dfmon \- monitor disk usage
 .
 .SH SYNOPSIS
 .
-.B dfmon [-v] [-r]
+.B dfmon [-l] [-v] [-a] [-r] [-V]
 .
 .\" -----------------------------------------------------------------
 .
@@ -30,29 +30,65 @@ output.
 .SH OPTIONS
 .
 .TP
+.B -l
+List the most recently obtained data (percentage and mount point) and exit.
+.
+.TP
 .B -v
 Be verbose
 .
 .TP
+.B -a
+Check usage on all local filesystems, not just ones with a disk device node.
+.
+.TP
 .B -r
-Don't compare to the previous output.  This "resets" the monitor.
+Don't compare to the previous output.  This "resets" the monitor without
+deleting any historical data.
+.
+.TP
+.B -V
+Show version information and exit.
 .
 .\" -----------------------------------------------------------------
 .
 .SH FILES
 .
-The usage for each mount point is recorded in
-.IR MOUNTPOINT /LOG
-within the
+All data is contained within the 
+.I HOST
+directory in the
 .B dfmon
 root directory
-.BI /var/local/dfmon/ HOST
--- for example, the file
-.B /var/local/dfmon/gandalf/usr/LOG
+.BR /var/local/dfmon .
+The usage for each mount point is recorded in
+.IR MOUNTPOINT /dfmon.log
+within the
+.I HOST
+directory.
+.P
+For example, the file
+.B /var/local/dfmon/gandalf/usr/dfmon.log
 would contain the disk usage record for mount point
 .B /usr
 on host
 .BR gandalf .
+.P
+The directory
+.B dfmon.conf
+within
+.BI /var/local/dfmon/ MOUNTPOINT
+may contain three files with special significance:
+.B skip
+causes
+.B dfmon
+to skip on a mount point;
+.B threshold.percent
+denotes a percentage of space used that triggers a warning, and
+.B threshold.increase
+denotes an
+.B increase
+in the percentage of space that will trigger a warning.  Warnings are printed
+to standard error.
 .
 .\" -----------------------------------------------------------------
 .
