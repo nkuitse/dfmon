@@ -1,0 +1,45 @@
+#!/bin/zsh -e
+
+integer err=0
+typeset host=$(hostname -s)
+typeset var=/var/local/dfmon/$host
+typeset timestamp=$(print -P '%D{%Y%m%dT%H%M%S}')
+typeset used mount
+
+typeset opt reset=false
+while getopts :r opt; do
+    case $opt in
+        (r) reset=true ;;
+    esac
+done
+
+main()
+    df -lP | awk '/^\// { print $5, $6 }' | while read -r used mount; do
+        mkdir -p $var$mount
+        cd $var$mount 
+        [[ ! -e SKIP ]] || continue
+        cur=${used[1,-2]}
+        if [[ ! -e LOG ]]; then
+            print "Filesystem usage monitoring begun: $mount on $host is at $used" >&2
+            print $timestamp $cur >> LOG
+            continue
+        fi
+        prev=$(tail -n1 < LOG | awk '{ print $2 }')
+        print $timestamp $cur >> LOG
+        if $reset || [[ -z $prev ]]; then
+            continue
+        elif [[ -e THRESHOLD.percent ]]; then
+            threshold=$(cat THRESHOLD.percent)
+        elif [[ -e THRESHOLD.increase ]]; then
+            threshold=$(( prev + $(cat THRESHOLD.increase) ))
+        else
+            threshold=$(( prev + 1 ))
+        fi
+        if (( cut > threshold )); then
+            print "$host: disk usage on $mount exceeds threshold (was $prev% now $cur% used)"
+            err=2
+        fi
+    done
+    exit $err
+}
+
