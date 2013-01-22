@@ -18,7 +18,8 @@ foo:
 
 boj-install: example/boj
 	mkdir -p /var/local/$(PROG)
-	install -m 644 example/boj/* /var/local/$(PROG)
+	install example/boj/run /var/local/$(PROG)
+	install -m 644 example/boj/mail* /var/local/$(PROG)
 
 install: $(PROG) $(PROG).1
 	mkdir -p $(BINDIR) $(MANDIR)
@@ -36,6 +37,6 @@ $(PROG)-$(VERSION): metadata $(SOURCES)
 	cp -r $(SOURCES) $@/
 
 clean:
-	rm -Rf $(PROG)-*.*.*
+	rm -Rf $(PROG)-*.*.* *.bak
 
 .PHONY: default metadata install dist clean
