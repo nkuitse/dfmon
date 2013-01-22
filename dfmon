@@ -33,14 +33,14 @@ main() {
     df-summary | while read -r used mount; do
         mkdir -p $var$mount
         cd $var$mount 
-        [[ ! -e SKIP ]] || continue
+        [[ ! -e dfmon.conf/skip ]] || continue
         cur=${used[1,-2]}
-        if [[ ! -e LOG ]]; then
+        if [[ ! -e dfmon.log ]]; then
             ! $verbose || print "$host: disk usage on $mount is now being monitored: currently $used used" >&2
-            $last || print $timestamp $cur >> LOG
+            $last || print $timestamp $cur >> dfmon.log
             continue
         fi
-        prev=$(tail -n1 < LOG | awk '{ print $2 }')
+        prev=$(tail -n1 < dfmon.log | awk '{ print $2 }')
         if $last; then
             if (( cur > prev )); then
                 trend='+'$( printf '%2d' $(( cur - prev )) )
@@ -50,17 +50,17 @@ main() {
             printf '%-3.3s %4d %4d %s\n' "$trend" $cur $prev $mount >&2
             continue
         fi
-        print $timestamp $cur >> LOG
+        print $timestamp $cur >> dfmon.log
         if $reset; then
             ! $verbose || print "$host: resetting baseline on $mount" >&2
             continue
         elif [[ -z $prev ]]; then
             ! $verbose || print "$host: setting baseline on $mount" >&2
             continue
-        elif [[ -e THRESHOLD.percent ]]; then
-            threshold=$(cat THRESHOLD.percent)
-        elif [[ -e THRESHOLD.increase ]]; then
-            threshold=$(( prev + $(cat THRESHOLD.increase) ))
+        elif [[ -e dfmon.conf/threshold.percent ]]; then
+            threshold=$(cat dfmon.conf/threshold.percent)
+        elif [[ -e dfmon.conf/threshold.increase ]]; then
+            threshold=$(( prev + $(cat dfmon.conf/threshold.increase) ))
         else
             threshold=$(( prev + 1 ))
         fi
