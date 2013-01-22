@@ -6,26 +6,41 @@ typeset var=/var/local/dfmon/$host
 typeset timestamp=$(print -P '%D{%Y%m%dT%H%M%S}')
 typeset used mount
 
-typeset opt reset=false verbose=false
-while getopts :rv opt; do
+typeset opt all=false last=false reset=false verbose=false
+while getopts :alrv opt; do
     case $opt in
+        (a) all=true ;;
+        (l) last=true ;;
         (r) reset=true ;;
         (v) verbose=true ;;
     esac
 done
 
 main() {
-    df -lP | awk '/^\// { print $5, $6 }' | while read -r used mount; do
+    typeset trend
+    if $last; then
+        print '+/- %Now %Prv Mountpoint' >&2
+    fi
+    df-summary | while read -r used mount; do
         mkdir -p $var$mount
         cd $var$mount 
         [[ ! -e SKIP ]] || continue
         cur=${used[1,-2]}
         if [[ ! -e LOG ]]; then
             ! $verbose || print "$host: disk usage on $mount is now being monitored: currently $used used" >&2
-            print $timestamp $cur >> LOG
+            $last || print $timestamp $cur >> LOG
             continue
         fi
         prev=$(tail -n1 < LOG | awk '{ print $2 }')
+        if $last; then
+            if (( cur > prev )); then
+                trend='+'$( printf '%2d' $(( cur - prev )) )
+            elif (( prev > cur )); then
+                trend='-'$( printf '%2d' $(( prev - cur )) )
+            fi
+            printf '%-3.3s %4d %4d %s\n' "$trend" $cur $prev $mount >&2
+            continue
+        fi
         print $timestamp $cur >> LOG
         if $reset; then
             ! $verbose || print "$host: resetting baseline on $mount" >&2
@@ -46,6 +61,14 @@ main() {
         fi
     done
     exit $err
+}
+
+df-summary() {
+    if $all; then
+        df -lP | awk '/ \// { print $5, $6 }'
+    else
+        df -lP | awk '/^\// { print $5, $6 }' 
+    fi
 }
 
 main "$@"
