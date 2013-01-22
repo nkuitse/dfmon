@@ -1,10 +1,6 @@
 .\" Process this file with
 .\" groff -man -Tascii dfmon.1
 .\"
-.ds @@VERSION 0.1.5
-.ds @@AUTHOR Paul Hoffman <paul@flo.org>
-.ds @@COPYRIGHT Copyright 2013 Fenway Libraries Online.
-.
 .TH DFMON 1 "dfmon"
 .
 .
@@ -25,7 +21,7 @@ dfmon \- monitor disk usage
 .
 .B dfmon
 runs
-.B du(1)
+.B df(1)
 and compares the output for each local mount point to the previously obtained
 output.
 .
@@ -62,16 +58,13 @@ on host
 .
 .\" .SH DIAGNOSTICS
 .SH VERSION 
-.\" @VERSION 0.6.0
-\*[@@VERSION]
+__VERSION__
 .
 .SH AUTHOR
-.\" @AUTHOR Paul Hoffman <paul@flo.org>
-\*[@@AUTHOR]
+__AUTHOR__
 .
 .SH COPYRIGHT
-.\" @COPYRIGHT Copyright 2013 Fenway Libraries Online.
-\*[@@COPYRIGHT]
+__COPYRIGHT__
 .P
 Released under the terms of the GNU
 General Public License, version 2 -- see the file LICENSE for details.
