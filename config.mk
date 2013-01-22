@@ -1,5 +1,5 @@
 PROG      = dfmon
-VERSION   = 0.1.6
+VERSION   = 0.1.7
 AUTHOR    = Paul Hoffman <paul@flo.org>
 COPYRIGHT = Copyright 2013 Fenway Libraries Online.
 
