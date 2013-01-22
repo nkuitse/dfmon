@@ -1,0 +1,81 @@
+.\" Process this file with
+.\" groff -man -Tascii dfmon.1
+.\"
+.ds @@VERSION 0.1.0
+.ds @@AUTHOR Paul Hoffman <paul@flo.org>
+.ds @@COPYRIGHT Copyright 2013 Fenway Libraries Online.
+.
+.TH DFMON 1 "dfmon"
+.
+.
+.SH NAME
+.
+dfmon \- monitor disk usage
+.
+.
+.\" -----------------------------------------------------------------
+.
+.SH SYNOPSIS
+.
+.B dfmon [-v] [-r]
+.
+.\" -----------------------------------------------------------------
+.
+.SH DESCRIPTION
+.
+.B dfmon
+runs
+.B du(1)
+and compares the output for each local mount point to the previously obtained
+output.
+.
+.\" -----------------------------------------------------------------
+.
+.SH OPTIONS
+.
+.TP
+.B -v
+Be verbose
+.
+.TP
+.B -r
+Don't compare to the previous output.  This "resets" the monitor.
+.
+.\" -----------------------------------------------------------------
+.
+.SH FILES
+.
+The usage for each mount point is recorded in
+.IR MOUNTPOINT /LOG
+within the
+.B dfmon
+root directory
+.BI /var/local/dfmon/ HOST
+-- for example, the file
+.B /var/local/dfmon/gandalf/usr/LOG
+would contain the disk usage record for mount point
+.B /usr
+on host
+.BR gandalf .
+.
+.\" -----------------------------------------------------------------
+.
+.\" .SH DIAGNOSTICS
+.SH VERSION 
+.\" @VERSION 0.6.0
+\*[@@VERSION]
+.
+.SH AUTHOR
+.\" @AUTHOR Paul Hoffman <paul@flo.org>
+\*[@@AUTHOR]
+.
+.SH COPYRIGHT
+.\" @COPYRIGHT Copyright 2013 Fenway Libraries Online.
+\*[@@COPYRIGHT]
+.P
+Released under the terms of the GNU
+General Public License, version 2 -- see the file LICENSE for details.
+.
+.\" .SH "SEE ALSO"
+.\" .BR bar (1),
+
