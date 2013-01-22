@@ -16,6 +16,10 @@ foo:
 	@VERSION="$(VERSION)" AUTHOR="$(AUTHOR)" COPYRIGHT="$(COPYRIGHT)" \
 		perl -i -pe 's/ @@(VERSION|AUTHOR|COPYRIGHT).*/ \@\@$$1 $$ENV{$$1}/' $(PROG) $(PROG).1
 
+boj-install: example/boj
+	mkdir -p /var/local/$(PROG)
+	install -m 644 example/boj/* /var/local/$(PROG)
+
 install: $(PROG) $(PROG).1
 	mkdir -p $(BINDIR) $(MANDIR)
 	install $(PROG) $(BINDIR)/
