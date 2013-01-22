@@ -6,10 +6,11 @@ typeset var=/var/local/dfmon/$host
 typeset timestamp=$(print -P '%D{%Y%m%dT%H%M%S}')
 typeset used mount
 
-typeset opt reset=false
-while getopts :r opt; do
+typeset opt reset=false verbose=false
+while getopts :rv opt; do
     case $opt in
         (r) reset=true ;;
+        (v) verbose=true ;;
     esac
 done
 
@@ -20,13 +21,17 @@ main() {
         [[ ! -e SKIP ]] || continue
         cur=${used[1,-2]}
         if [[ ! -e LOG ]]; then
-            print "$host: disk usage on $mount is now being monitored: currently $used used" >&2
+            ! $verbose || print "$host: disk usage on $mount is now being monitored: currently $used used" >&2
             print $timestamp $cur >> LOG
             continue
         fi
         prev=$(tail -n1 < LOG | awk '{ print $2 }')
         print $timestamp $cur >> LOG
-        if $reset || [[ -z $prev ]]; then
+        if $reset; then
+            ! $verbose || print "$host: resetting baseline on $mount" >&2
+            continue
+        elif [[ -z $prev ]]; then
+            ! $verbose || print "$host: setting baseline on $mount" >&2
             continue
         elif [[ -e THRESHOLD.percent ]]; then
             threshold=$(cat THRESHOLD.percent)
