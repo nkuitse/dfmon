@@ -6,18 +6,39 @@ typeset var=/var/local/dfmon/$host
 typeset timestamp=$(print -P '%D{%Y%m%dT%H%M%S}')
 typeset used mount
 
-typeset opt all=false last=false reset=false verbose=false
-while getopts :alrv opt; do
-    case $opt in
-        (a) all=true ;;
-        (l) last=true ;;
-        (r) reset=true ;;
-        (v) verbose=true ;;
-    esac
-done
+metadata() {
+    cat <<EOS
+    @@VERSION 0.1.5
+    @@AUTHOR Paul Hoffman <paul@flo.org>
+    @@COPYRIGHT Copyright 2013 Fenway Libraries Online.
+EOS
+}
+
+show-version() {
+    typeset x VERSION AUTHOR COPYRIGHT
+    metadata | fgrep '@@VERSION'   | read x VERSION
+    metadata | fgrep '@@AUTHOR'    | read x AUTHOR
+    metadata | fgrep '@@COPYRIGHT' | read x COPYRIGHT
+    cat <<EOS
+dfmon $VERSION by $AUTHOR
+$COPYRIGHT
+Licensed under the terms of the GNU General Public License, version 2.
+See LICENSE for details.
+EOS
+    exit 0
+}
 
 main() {
-    typeset trend
+    typeset trend opt all=false last=false reset=false verbose=false
+    while getopts :alrvV opt; do
+        case $opt in
+            (a) all=true ;;
+            (l) last=true ;;
+            (r) reset=true ;;
+            (v) verbose=true ;;
+            (V) show-version ;;
+        esac
+    done
     if $last; then
         print '+/- %Now %Prv Mountpoint' >&2
     fi
