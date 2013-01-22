@@ -64,7 +64,7 @@ main() {
         else
             threshold=$(( prev + 1 ))
         fi
-        if (( cut > threshold )); then
+        if (( cur > threshold )); then
             print "$host: disk usage on $mount exceeds threshold (was $prev% now $cur% used)"
             err=2
         fi
