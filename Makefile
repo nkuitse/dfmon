@@ -4,21 +4,21 @@ SOURCES = $(PROG) $(PROG).1 Makefile README LICENSE config.mk example
 
 default: $(PROG).tmp $(PROG).1.tmp
 
-$(PROG).tmp: $(PROG)
+$(PROG).tmp: $(PROG) config.mk
 	m4 -D__VERSION__="$(VERSION)" -D__AUTHOR__="$(AUTHOR)" -D__COPYRIGHT__="$(COPYRIGHT)" $< > $@
 
-$(PROG).1.tmp: $(PROG).1
+$(PROG).1.tmp: $(PROG).1 config.mk
 	m4 -D__VERSION__="$(VERSION)" -D__AUTHOR__="$(AUTHOR)" -D__COPYRIGHT__="$(COPYRIGHT)" $< > $@
-
-boj-install: example/boj
-	mkdir -p /var/local/$(PROG)
-	install example/boj/run /var/local/$(PROG)
-	install -m 644 example/boj/mail* /var/local/$(PROG)
 
 install: $(PROG).tmp $(PROG).1.tmp
 	mkdir -p $(BINDIR) $(MANDIR)
 	install $(PROG).tmp $(BINDIR)/$(PROG)
 	install $(PROG).1.tmp $(MANDIR)/$(PROG).1
+
+boj-install: example/boj
+	mkdir -p /var/local/$(PROG)
+	install example/boj/run /var/local/$(PROG)
+	install -m 644 example/boj/mail* /var/local/$(PROG)
 
 dist: $(PROG)-$(VERSION).tar.gz
 
