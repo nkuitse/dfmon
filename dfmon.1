@@ -13,7 +13,7 @@ dfmon \- monitor disk usage
 .
 .SH SYNOPSIS
 .
-.B dfmon [-l] [-v] [-a] [-r] [-V]
+.B dfmon [-l] [-v] [-a] [-r] [-V] [-i NUM | -p PCT] [MOUNTPOINT]
 .
 .\" -----------------------------------------------------------------
 .
@@ -32,6 +32,20 @@ output.
 .TP
 .B -l
 List the most recently obtained data (percentage and mount point) and exit.
+.
+.TP
+.BI -p PCT
+Set the percent threshold of
+.I MOUNTPOINT
+to
+.IR PCT .
+.
+.TP
+.BI -i NUM
+Set the increase threshold of
+.I MOUNTPOINT
+to
+.IR NUM .
 .
 .TP
 .B -v
