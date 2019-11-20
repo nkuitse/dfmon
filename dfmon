@@ -3,20 +3,22 @@
 typeset host=$(hostname -s); host=$host:l
 typeset var=/var/local/dfmon/$host
 typeset timestamp=$(print -P '%D{%Y%m%dT%H%M%S}')
-typeset all=false last=false reset=false verbose=false
+typeset all=false last=false reset=false verbose=false nowrite=false showhost=false
 typeset -a action thresholds
 typeset trend opt t
 integer err=0
 
 main() {
     typeset -a action
-    action=( check )
-    while getopts :alrvVp:i: opt; do
+    action=( list )
+    while getopts :arvnhcVp:i: opt; do
         case $opt in
             (a) all=true ;;
             (r) reset=true ;;
             (v) verbose=true ;;
-            (l) action=( list ) ;;
+            (n) nowrite=true ;;
+            (h) showhost=true ;;
+            (c) action=( checkpoint ) ;;
             (V) action=( show-version ) ;;
             (p) action=( set-percent-threshold $OPTARG ) ;;
             (i) action=( set-increase-threshold $OPTARG ) ;;
@@ -29,20 +31,21 @@ main() {
     $func $@
 }
 
-check() {
-    typeset used mount
-    df-summary | while read -r used mount; do
-        mkdir -p $var$mount
-        cd $var$mount 
+checkpoint() {
+    typeset cap used mount
+    integer prev cur inc pct chg
+    df-summary | while read -r cap used mount; do
+        $nowrite || mkdir -p $var$mount
+        cd $var$mount
         [[ ! -e dfmon.conf/skip ]] || continue
         cur=${used[1,-2]}
         if [[ ! -e dfmon.log ]]; then
             ! $verbose || print "$host: disk usage on $mount is now being monitored: currently $used used" >&2
-            $last || print $timestamp $cur >> dfmon.log
+            $last || $nowrite || print $timestamp $cur >> dfmon.log
             continue
         fi
         prev=$(tail -n1 < dfmon.log | awk '{ print $2 }')
-        print $timestamp $cur >> dfmon.log
+        $nowrite || print $timestamp $cur >> dfmon.log
         if $reset; then
             ! $verbose || print "$host: resetting baseline on $mount" >&2
         elif [[ -z $prev ]]; then
@@ -66,38 +69,66 @@ check() {
 
 list() {
     if $verbose; then
-        print -- '%Used     Thresholds                              '
-        print -- 'Prev Cur  Incr Pct   Mount point                  '
-        print -- '---- ---  ---- ---   -----------------------------'
-    else
-        print '+/- %Now %Prv Mount point' >&2
+        print -- 'Chg /Thr ( Prv ) Now /Thr  Size  Stat  Mount point'
+        print -- '---  --- ------- ---  ---  ----  ----  ------------------------'
     fi
-    df-summary | while read -r used mount; do
+    typeset stat pfx sfx=$'\e[0m'
+    typeset cap used mount
+    df-summary | while read -r cap used mount; do
         cd $var$mount || continue
         [[ ! -e dfmon.conf/skip ]] || continue
         prev=$( [[ ! -e dfmon.log ]] || tail -n1 < dfmon.log | awk '{ print $2 }' )
         cur=${used[1,-2]}
-        if $verbose; then
-            integer pct=100 inc=2
-            [[ ! -e dfmon.conf/threshold.percent ]]  || pct=$(cat dfmon.conf/threshold.percent)
-            [[ ! -e dfmon.conf/threshold.increase ]] || inc=$(cat dfmon.conf/threshold.increase)
-            printf '%4d %3d  %4.3s %3d   %s\n' $prev $cur $inc $pct $mount
+        pct=100; inc=2; chg=$(( cur - prev ))
+        [[ ! -e dfmon.conf/threshold.percent ]]  || pct=$(cat dfmon.conf/threshold.percent)
+        [[ ! -e dfmon.conf/threshold.increase ]] || inc=$(cat dfmon.conf/threshold.increase)
+        stat=' ok '
+        if (( cur > pct || chg > inc )); then
+            stat=WARN
+            err=2
+            [[ ! -t 1 ]] || pfx=$'\e[31;1m'
         else
-            if (( cur > prev )); then
-                trend='+'$( printf '%2d' $(( cur - prev )) )
-            elif (( prev > cur )); then
-                trend='-'$( printf '%2d' $(( prev - cur )) )
-            fi
-            printf '%-3.3s %4d %4d %s\n' "$trend" $cur $prev $mount >&2
+            pfx=''
+        fi
+        ! $showhost || mount=${host}:$mount
+        if $verbose; then
+            printf $pfx'%3d /%3d ( %3d ) %3d /%3d  %4.4s  %-4.4s  %s'$sfx'\n' $chg $inc $prev $cur $pct $(pretty-capacity $cap) $stat $mount
+        else
+            printf $pfx'%d/%d %s %s'$sfx'\n' $cur $pct $stat $mount
+            # printf '%4s %7s %9s %s\n' $prev $trend/$inc $cur/$pct $mount
+            # printf '%-3.3s %4d %4d %s\n' "$trend" $cur $prev $stat $mount >&2
         fi
     done
+    exit $err
 }
 
 df-summary() {
     if $all; then
-        df -lP | awk '/ \// { print $5, $6 }'
+        df -klP | awk '/ \// { print $2, $5, $6 }'
     else
-        df -lP | awk '/^\// { print $5, $6 }' 
+        df -klP | awk '/^\// { print $2, $5, $6 }'
+    fi
+}
+
+pretty-capacity() {
+    typeset cap=$1
+    if (( cap >= 2 ** 30 )); then
+        units=T
+        (( cap = (cap+0.0) / 2 ** 30 ))
+    elif (( cap >= 2 ** 20 )); then
+        units=G
+        (( cap = (cap+0.0) / 2 ** 20 ))
+    elif (( cap >= 2 ** 10 )); then
+        units=M
+        (( cap = (cap+0.0) / 2 ** 10 ))
+    else
+        units=K
+    fi
+    # print DEBUG $cap $units >&2
+    if (( cap >= 10 )); then
+        printf '%3d%s\n' $cap $units
+    else
+        printf '%1.1f%s\n' $cap $units
     fi
 }
 
